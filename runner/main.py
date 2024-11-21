@@ -5,6 +5,7 @@ import os
 import signal
 import sys
 import argparse
+import test
 
 def get_full_path(*relative_paths):
     return os.path.join(os.path.dirname(__file__), *relative_paths)
@@ -74,12 +75,9 @@ def main():
         print("Memcached did not start properly. Exiting.")
         memcached_process.terminate()
         sys.exit(1)
-
-    # Run the client script
-    client_process = run_client_script(args.port, args.num_keys)
-
-    # Wait for the client script to finish
-    client_process.wait()
+        
+    # Run client
+    test.run(args.port, args.num_keys)
 
     print("Client script has finished execution.")
 
