@@ -24,22 +24,44 @@ def stress_test(client, num_keys):
 
     print(f"Starting stress test with {num_keys} keys...")
 
-    # Set operations
-    for i in range(num_keys):
-        key = generate_random_string(10)
-        value = generate_random_string(50)
-        client.set(key, value)
-        keys.append((key, value))
-        if (i + 1) % 1000 == 0:
-            print(f"Set {i + 1} keys...")
+    num_operations = num_keys * 3  # Total number of operations
+    for i in range(num_operations):
+        operation = random.choice(['set', 'get', 'delete'])
+        
+        if operation == 'set':
+            key = generate_random_string(10)
+            value = generate_random_string(50)
+            client.set(key, value)
+            keys.append((key, value))
+        elif operation == 'get':
+            if keys:
+                key, expected_value = random.choice(keys)
+                value = client.get(key)
+                if value != expected_value:
+                    print(f"Data mismatch for key {key}: expected {expected_value}, got {value}")
+            else:
+                # No keys to get, perform a set operation instead
+                key = generate_random_string(10)
+                value = generate_random_string(50)
+                client.set(key, value)
+                keys.append((key, value))
+        elif operation == 'delete':
+            if keys:
+                index = random.randrange(len(keys))
+                key, _ = keys.pop(index)
+                client.delete(key)
+            else:
+                # No keys to delete, perform a set operation instead
+                key = generate_random_string(10)
+                value = generate_random_string(50)
+                client.set(key, value)
+                keys.append((key, value))
+        else:
+            # Should not reach here
+            pass
 
-    # Get operations
-    for i, (key, expected_value) in enumerate(keys):
-        value = client.get(key)
-        if value != expected_value:
-            print(f"Data mismatch for key {key}: expected {expected_value}, got {value}")
         if (i + 1) % 1000 == 0:
-            print(f"Retrieved {i + 1} keys...")
+            print(f"Performed {i + 1} operations...")
 
     end_time = time.time()
     duration = end_time - start_time
@@ -55,7 +77,7 @@ def run(port, keys):
 
     # Close the client connection
     client.disconnect_all()
-    
+        
 def main():
     args = parse_arguments()
     run(args.port, args.keys)
